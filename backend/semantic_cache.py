@@ -104,6 +104,7 @@ class LLMSemanticCache:
         # - distance_threshold: Maximum distance for a cache hit (0-1, lower = more similar)
         # - ttl: Time-to-live for cached entries in seconds
         self.cache = SemanticCache(
+        
         )
         
         logger.info("LLMSemanticCache initialized successfully")
@@ -166,6 +167,7 @@ class LLMSemanticCache:
             # - prompt: The user's query (will be embedded)
             # - response: The LLM's response to cache
             self.cache.store(
+        
             )
             logger.info(f"Cached response for query: '{query[:50]}...'")
             return True
@@ -228,10 +230,14 @@ class LLMSemanticCache:
 _semantic_cache: Optional[LLMSemanticCache] = None
 
 
-def get_semantic_cache() -> LLMSemanticCache:
-    """Get or create the semantic cache singleton"""
+def get_semantic_cache() -> Optional[LLMSemanticCache]:
+    """Get or create the semantic cache singleton. Returns None if initialization fails."""
     global _semantic_cache
     if _semantic_cache is None:
         logger.info("Creating new LLMSemanticCache instance")
-        _semantic_cache = LLMSemanticCache()
+        try:
+            _semantic_cache = LLMSemanticCache()
+        except Exception as e:
+            logger.warning(f"Semantic cache not initialized (challenge incomplete?): {e}")
+            return None
     return _semantic_cache

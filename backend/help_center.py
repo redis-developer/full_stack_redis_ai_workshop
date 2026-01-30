@@ -112,7 +112,12 @@ class HelpCenterEngine:
         self.openai_client = OpenAI(api_key=OPENAI_API_KEY)
         
         # Initialize guardrail router for out-of-scope query detection
-        self.router = create_guardrail_router(self.client, self.vectorizer)
+        # This may fail if the SemanticRouter challenge isn't completed yet
+        try:
+            self.router = create_guardrail_router(self.client, self.vectorizer)
+        except Exception as e:
+            logger.warning(f"Guardrail router not initialized (challenge incomplete?): {e}")
+            self.router = None
         
         # Auto-ingest articles on first run if index is empty
         if auto_ingest:
@@ -354,22 +359,27 @@ Please provide a helpful, conversational response that addresses the user's ques
         logger.info(f"Processing chat: '{query[:50]}...'")
         
         # Step 0: Check guardrails - is this a StreamFlix-related question?
-        route_match = self.router(query)
-        
-        if route_match.name is None:  # No match within threshold
-            logger.info(f"Query blocked by guardrail: '{query[:50]}...' (distance: {route_match.distance})")
-            return ChatResponse(
-                answer=OUT_OF_SCOPE_MESSAGE,
-                sources=[],
-                from_cache=False,
-                blocked=True,
-            )
-        
-        logger.info(f"Query allowed: matched '{route_match.name}' (distance: {route_match.distance})")
+        # Skip if router not initialized (challenge not completed)
+        if self.router is not None:
+            route_match = self.router(query)
+            
+            if route_match.name is None:  # No match within threshold
+                logger.info(f"Query blocked by guardrail: '{query[:50]}...' (distance: {route_match.distance})")
+                return ChatResponse(
+                    answer=OUT_OF_SCOPE_MESSAGE,
+                    sources=[],
+                    from_cache=False,
+                    blocked=True,
+                )
+            
+            logger.info(f"Query allowed: matched '{route_match.name}' (distance: {route_match.distance})")
+        else:
+            logger.debug("Guardrail check skipped - router not initialized")
         
         # Step 1: Check semantic cache
-        if use_cache:
-            cache = get_semantic_cache()
+        # Skip if cache not initialized (challenge not completed)
+        cache = get_semantic_cache() if use_cache else None
+        if cache is not None:
             cache_result = cache.check(query)
             
             if cache_result.hit:
@@ -380,6 +390,8 @@ Please provide a helpful, conversational response that addresses the user's ques
                     from_cache=True,
                     cache_similarity=cache_result.similarity,
                 )
+        elif use_cache:
+            logger.debug("Cache check skipped - cache not initialized")
         
         # Step 2: Search for relevant articles
         articles = self.search_articles(query, num_results=3)
@@ -387,8 +399,8 @@ Please provide a helpful, conversational response that addresses the user's ques
         # Step 3: Generate response
         response_text, token_usage = self.generate_response(query, articles)
         
-        # Step 4: Store in cache (only if no PII detected)
-        if use_cache:
+        # Step 4: Store in cache (only if no PII detected and cache is available)
+        if cache is not None:
             can_cache, cache_reason = should_cache(query, response_text)
             if can_cache:
                 cache.store(query, response_text)
