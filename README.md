@@ -153,7 +153,7 @@ Complete these challenges in order to build out the full application. Look for `
 ```bash
 # Clone and configure
 git clone <repo-url>
-cd movie-recommender-workshop-starter
+cd full_stack_redis_ai_workshop
 
 # Create .env file
 echo "REDIS_URL=redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT" > .env
