@@ -1,6 +1,6 @@
-# Movie Recommender with Redis RAG & Semantic Cache Workshop
+# Movie Searcher with Redis search types & a customer support RAG implementation
 
-A hands-on workshop to build a movie recommendation engine using **Redis Cloud**, **Vector Search**, **RAG (Retrieval Augmented Generation)**, and **Semantic Caching**. Learn how to implement various search techniques including vector similarity search, hybrid search, full-text search, and more! Also includes a **Help Center** with guardrails and PII protection.
+A hands-on workshop to build a movie searcher  using **Redis Cloud**, **Vector Search**, **RAG (Retrieval Augmented Generation)**, and **Semantic Caching**. Learn how to implement various search techniques including vector similarity search, hybrid search, full-text search, and more! Also includes a **Help Center** with guardrails using semantic router and PII protection.
 
 ![Redis Cloud](https://img.shields.io/badge/Redis_Cloud-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
